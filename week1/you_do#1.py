@@ -7,6 +7,8 @@ import plotly.graph_objects as go
 from sklearn.datasets import fetch_california_housing
 from numpy import log as ln
 from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+
 
 
 def model_with_threshold(x:np.ndarray,y:np.ndarray,alpha:float=10**-7*9,threshold:int=3,num_of_iter:int=2000):
@@ -21,7 +23,7 @@ def model_with_threshold(x:np.ndarray,y:np.ndarray,alpha:float=10**-7*9,threshol
 
     st.write(" price cannot be -  so I use ln(price) then return e^result to overcome that stuation ")
     st.write("in this case mse=1.1949060618195373 ")
-    st.write("When ı train model without consider price cannot be negatif number , then mse=0.7011311504478739")
+    st.write("When ı train model without consider price cannot be negatif number ,mse became between 0.8-1.3 ")
 
      
     loss=[]
@@ -54,10 +56,6 @@ def model_with_threshold(x:np.ndarray,y:np.ndarray,alpha:float=10**-7*9,threshol
 
   
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x, y=y, mode='markers', name='data points'))
-    fig.add_trace(go.Scatter(x=x, y=beta[0] + beta[1] * x, mode='lines', name='regresssion'))
-    st.plotly_chart(fig, use_container_width=True)
     y_pred_ln = beta[0] + beta[1] * x
     y_pred_actual= np.exp(y_pred_ln)
    
@@ -73,9 +71,20 @@ def main():
             dict(MedInc=X['MedInc'], Price=cal_housing.target))  
     x=df["MedInc"]
   
-    beta,y_pred=model_with_threshold(x.to_numpy(),y,alpha=10**-7*9,threshold=3,num_of_iter=2000)
+    beta,y_pred=model_with_threshold(x.to_numpy(),y,alpha=10**-6,threshold=20,num_of_iter=2000)
     st.subheader(r"End of train beta values :")
     st.latex(fr"\beta_0: {beta[0]} \\ \beta_1: {beta[1]} ")
     st.subheader(f"Mean square error: {mean_squared_error(y,y_pred)}")
+    pd.DataFrame(y_pred,columns=["Predict_in_You_Do"]).to_csv("Predict_in_you_do.csv")
+
+    we_do=pd.read_csv("Predict_in_we_do.csv")
+  
+    fig = go.Figure()
+    
+    fig.add_trace(go.Scatter(x=x, y=y, mode='markers', name='data points'))
+    fig.add_trace(go.Scatter(x=x, y=ln(y_pred), mode='lines', name='You_do_regression -Ln(x) -actual result e^x'))
+    fig.add_trace(go.Scatter(x=x, y=we_do["Predict_in_we_do"], mode='lines', name='we_do_regression'))
+
+    st.plotly_chart(fig, use_container_width=True)
 if __name__ == '__main__':
     main()
